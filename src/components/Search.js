@@ -1,5 +1,5 @@
 import React from 'react';
-import Categoria from '../services/category';
+import Categoria from './category';
 
 class Search extends React.Component {
   render() {
