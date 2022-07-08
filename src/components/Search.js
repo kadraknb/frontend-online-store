@@ -7,6 +7,7 @@ class Search extends React.Component {
     super();
     this.state = {
       nomeBusca: '',
+      categoryId: '',
       listaItens: [],
       alreadyFetched: false,
     };
@@ -15,23 +16,42 @@ class Search extends React.Component {
   componentDidMount() {
   }
 
-  fachItem = async () => {
-    const { nomeBusca } = this.state;
-    const { results } = await getProductsFromCategoryAndQuery('', nomeBusca);
+  componentDidUpdate() {
+  }
+
+  fetchItem = async () => {
+    const { nomeBusca, categoryId } = this.state;
+    const { results } = await getProductsFromCategoryAndQuery(categoryId, nomeBusca);
     this.setState({
       listaItens: results,
       alreadyFetched: true,
     });
   }
 
-  onQueryButtonClick = (aa) => {
-    aa.preventDefault();
-    this.fachItem();
+  // fetchItemsFromCategory = async (categoryId) => {
+  //   console.log(categoryId);
+  //   const { results } = await catedoriaId(categoryId);
+  //   console.log(results);
+  //   this.setState({
+  //     listaItens: results,
+  //     alreadyFetched: true,
+  //   });
+  // }
+
+  onQueryButtonClick = (event) => {
+    event.preventDefault();
+    this.fetchItem();
   }
 
   onChangeInput = ({ target }) => {
-    const { value } = target;
-    this.setState({ nomeBusca: value });
+    const { name, value } = target;
+    this.setState({ [name]: value });
+  }
+
+  onCategorySelect = (categoryId) => {
+    console.log('entrei');
+    this.setState({ categoryId }, () => this.fetchItem(categoryId));
+    // this.fetchItemsFromCategory(categoryId);
   }
 
   returnItensList = (alreadyFetched, listaItens) => {
@@ -54,13 +74,18 @@ class Search extends React.Component {
   }
 
   render() {
-    const { listaItens, nomeBusca, alreadyFetched } = this.state;
+    const { listaItens, nomeBusca, alreadyFetched, categoryId } = this.state;
     return (
       <>
-        <Categoria />
+        <Categoria
+          categoryId={ categoryId }
+          onChangeInput={ this.onChangeInput }
+          onCategorySelect={ this.onCategorySelect }
+        />
         <form>
           <input
             type="text"
+            name="nomeBusca"
             onChange={ (aa) => this.onChangeInput(aa) }
             value={ nomeBusca }
             data-testid="query-input"
