@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { getCategories } from '../services/api';
 
-class Categoria extends React.Component {
+class Categories extends React.Component {
   constructor() {
     super();
     this.state = {
@@ -11,12 +11,12 @@ class Categoria extends React.Component {
   }
 
   componentDidMount() {
-    this.fechGetCategories();
+    this.fetchCategories();
   }
 
-  fechGetCategories = async () => {
-    const dado = await getCategories();
-    this.setState({ categories: dado });
+  fetchCategories = async () => {
+    const data = await getCategories();
+    this.setState({ categories: data });
   }
 
   render() {
@@ -31,20 +31,19 @@ class Categoria extends React.Component {
     } = this.props;
     return (
       <>
-        { categories.map((aa) => (
-          <label htmlFor={ aa.id } key={ aa.id } data-testid="category">
+        { categories.map(({ id, name }) => (
+          <label htmlFor={ id } key={ id } data-testid="category">
             <input
-              id={ aa.id }
+              id={ id }
               type="radio"
               name="categoryId"
-              value={ aa.name }
+              value={ name }
               //  onChange={ (event) => onChangeInput(event, aa.id) }
               onClick={ () => {
-                console.log('uam string qualquer!');
-                onCategorySelect(aa.id);
+                onCategorySelect(id);
               } }
             />
-            {aa.name}
+            { name }
           </label>
         )) }
       </>
@@ -52,8 +51,8 @@ class Categoria extends React.Component {
   }
 }
 
-Categoria.propTypes = {
+Categories.propTypes = {
   onCategorySelect: PropTypes.func.isRequired,
 };
 
-export default Categoria;
+export default Categories;
