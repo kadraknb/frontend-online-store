@@ -1,6 +1,11 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import Categoria from './category';
 import { getProductsFromCategoryAndQuery } from '../services/api';
+
+const styleLi = {
+  backgroundColor: 'rgb(200, 0, 0)',
+};
 
 class Search extends React.Component {
   constructor() {
@@ -59,10 +64,12 @@ class Search extends React.Component {
       return (
         <ul>
           {listaItens.map((aa) => (
-            <li key={ aa.id } data-testid="product">
-              <p>{aa.title}</p>
-              <p>{aa.price}</p>
-              <img src={ aa.thumbnail } alt={ aa.title } />
+            <li key={ aa.id } data-testid="product" style={ styleLi }>
+              <Link to={ `/productDetail/${aa.id}` } data-testid="product-detail-link">
+                <p>{aa.title}</p>
+                <p>{aa.price}</p>
+                <img src={ aa.thumbnail } alt={ aa.title } />
+              </Link>
             </li>
           ))}
         </ul>
