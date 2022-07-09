@@ -1,9 +1,9 @@
 export async function getCategories() {
   try {
     const endpoint = 'https://api.mercadolibre.com/sites/MLB/categories';
-    const result = await fetch(endpoint);
-    const response = result.json();
-    return response;
+    const response = await fetch(endpoint);
+    const result = await response.json();
+    return result;
   } catch (err) {
     console.log(err);
   }
@@ -12,9 +12,9 @@ export async function getCategories() {
 export async function getProductsFromCategoryAndQuery(categoryId, query) {
   try {
     const end = `https://api.mercadolibre.com/sites/MLB/search?category=${categoryId}&q=${query}`;
-    const result = await fetch(end);
-    const response = result.json();
-    return response;
+    const response = await fetch(end);
+    const result = await response.json();
+    return result;
   } catch (err) {
     console.log(err);
   }
@@ -31,13 +31,23 @@ export async function getProductsFromCategoryAndQuery(categoryId, query) {
 //   }
 // }
 
-export async function getProductId(PRODUCT_ID) {
+export async function getProductItemByID(PRODUCT_ID) {
   try {
-    const end = `https://api.mercadolibre.com/items/${PRODUCT_ID}`;
-    const result = await fetch(end);
-    const response = result.json();
-    console.log(response);
-    return response;
+    const endpoint = `https://api.mercadolibre.com/items/${PRODUCT_ID}`;
+    const response = await fetch(endpoint);
+    const results = await response.json();
+    return results;
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+export async function getProductsItemsByID(...ids) {
+  try {
+    const endpoints = ids.map((id) => `https://api.mercadolibre.com/items/${id}`);
+    const responses = await Promise.all(endpoints.map((endpoint) => fetch(endpoint)));
+    const results = await Promise.all(responses.map((response) => response.json()));
+    return results;
   } catch (err) {
     console.log(err);
   }
