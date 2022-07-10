@@ -58,36 +58,40 @@ class Search extends React.Component {
     // this.fetchProductssFromCategory(categoryId);
   }
 
-  onAddItemToCart = (id) => {
-    const newCartItems = [id];
-    const cartItems = localStorage.getItem('cartItems');
-    if (cartItems) {
-      const storedCartItems = JSON.parse(cartItems);
-      newCartItems.push(...storedCartItems);
+  onAddProductToCart = (product) => {
+    const newCart = [];
+    const storedProducts = localStorage.getItem('productCart');
+    if (storedProducts) {
+      const storedCart = JSON.parse(storedProducts);
+      newCart.push(...storedCart);
     }
-    localStorage.setItem('cartItems', JSON.stringify(newCartItems));
+    newCart.push(product);
+    localStorage.setItem('productCart', JSON.stringify(newCart));
   }
 
-  returnProductsList = (alreadyFetched, productsList, onAddItemToCart) => {
+  returnProductsList = (alreadyFetched, productsList, onAddProductToCart) => {
     if (productsList.length) {
       return (
         <ul>
-          { productsList.map(({ id, title, price, thumbnail }) => (
-            <li key={ id } data-testid="product" style={ styleLi }>
-              <Link to={ `/productDetails/${id}` } data-testid="product-detail-link">
-                <p>{ title }</p>
-                <p>{ price }</p>
-                <img src={ thumbnail } alt={ title } />
-              </Link>
-              <button
-                type="button"
-                onClick={ () => onAddItemToCart(id) }
-                data-testid="product-add-to-cart"
-              >
-                Adicionar ao carrinho
-              </button>
-            </li>
-          )) }
+          { productsList.map((product) => {
+            const { id, title, price, thumbnail } = product;
+            return (
+              <li key={ id } data-testid="product" style={ styleLi }>
+                <Link to={ `/productDetails/${id}` } data-testid="product-detail-link">
+                  <p>{ title }</p>
+                  <p>{ price }</p>
+                  <img src={ thumbnail } alt={ title } />
+                </Link>
+                <button
+                  type="button"
+                  onClick={ () => onAddProductToCart(product) }
+                  data-testid="product-add-to-cart"
+                >
+                  Adicionar ao carrinho
+                </button>
+              </li>
+            );
+          }) }
         </ul>
       );
     }
@@ -120,7 +124,7 @@ class Search extends React.Component {
           </button>
         </form>
         { alreadyFetched ? (
-          this.returnProductsList(alreadyFetched, productsList, this.onAddItemToCart)
+          this.returnProductsList(alreadyFetched, productsList, this.onAddProductToCart)
         ) : (
           <h4 data-testid="home-initial-message">
             Digite algum termo de pesquisa ou escolha uma categoria.

@@ -20,17 +20,6 @@ export async function getProductsFromCategoryAndQuery(categoryId, query) {
   }
 }
 
-// export async function catedoriaId(CATEGORY_ID) {
-//   try {
-//     const end = `https://api.mercadolibre.com/sites/MLB/search?category=${CATEGORY_ID}`;
-//     const result = await fetch(end);
-//     const response = result.json();
-//     return response;
-//   } catch (err) {
-//     console.log(err);
-//   }
-// }
-
 export async function getProductItemByID(PRODUCT_ID) {
   try {
     const endpoint = `https://api.mercadolibre.com/items/${PRODUCT_ID}`;
@@ -42,13 +31,24 @@ export async function getProductItemByID(PRODUCT_ID) {
   }
 }
 
-export async function getProductsItemsByID(...ids) {
-  try {
-    const endpoints = ids.map((id) => `https://api.mercadolibre.com/items/${id}`);
-    const responses = await Promise.all(endpoints.map((endpoint) => fetch(endpoint)));
-    const results = await Promise.all(responses.map((response) => response.json()));
-    return results;
-  } catch (err) {
-    console.log(err);
-  }
-}
+// export async function catedoriaId(CATEGORY_ID) {
+//   try {
+//     const end = `https://api.mercadolibre.com/sites/MLB/search?category=${CATEGORY_ID}`;
+//     const result = await fetch(end);
+//     const response = result.json();
+//     return response;
+//   } catch (err) {
+//     console.log(err);
+//   }
+// }
+
+// export async function getProductsItemsByID(...ids) {
+//   try {
+//     const endpoints = ids.map((id) => `https://api.mercadolibre.com/items/${id}`);
+//     const responses = await Promise.all(endpoints.map((endpoint) => fetch(endpoint)));
+//     const results = await Promise.all(responses.map((response) => response.json()));
+//     return results;
+//   } catch (err) {
+//     console.log(err);
+//   }
+// }

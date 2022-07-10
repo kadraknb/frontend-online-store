@@ -1,12 +1,11 @@
 import React from 'react';
-import { getProductsItemsByID } from '../services/api';
 
 class ShoppingCart extends React.Component {
   constructor() {
     super();
     this.state = {
-      cartItems: [],
-      productsCountControl: {},
+      productCart: [],
+      productCountControl: {},
     };
   }
 
@@ -14,41 +13,76 @@ class ShoppingCart extends React.Component {
     this.getCartFromStorage();
   }
 
-  getCartFromStorage = async () => {
-    const storedCartItems = localStorage.getItem('cartItems');
-    if (storedCartItems) {
-      const itemIds = JSON.parse(storedCartItems);
-      const productsCountControl = {};
-      const unrepeatedIds = itemIds.reduce((finalArrayIds, id) => {
-        if (!finalArrayIds.includes(id)) {
-          productsCountControl[id] = 1;
-          return [...finalArrayIds, id];
+  getCartFromStorage = () => {
+    const storedProducts = localStorage.getItem('productCart');
+    if (storedProducts) {
+      const storedCart = JSON.parse(storedProducts);
+      const productCountControl = {};
+      const productCart = storedCart.reduce((productsArray, product) => {
+        if (!productsArray.some(({ id }) => id === product.id)) {
+          productCountControl[product.id] = 1;
+          return [...productsArray, product];
         }
-        productsCountControl[id] += 1;
-        return finalArrayIds;
+        productCountControl[product.id] += 1;
+        return productsArray;
       }, []);
-      const cartItems = await getProductsItemsByID(...unrepeatedIds);
-      this.setState({ cartItems, productsCountControl });
+      this.setState({ productCart, productCountControl });
     }
   }
 
+  onProductCountIncrease = (product) => {
+    const { productCountControl } = this.state;
+    productCountControl[product.id] += 1;
+    const productCart = JSON.parse(localStorage.getItem('productCart'));
+    productCart.push(product);
+    localStorage.setItem('productCart', JSON.stringify(productCart));
+    this.setState({ productCountControl });
+  }
+
+  onProductCountDecrease = ({ id }) => {
+    const { productCountControl } = this.state;
+    if (productCountControl[id] === 1) return;
+    productCountControl[id] -= 1;
+    const productCart = JSON.parse(localStorage.getItem('productCart'));
+    productCart.splice(productCart.indexOf({ id }), 1);
+    localStorage.setItem('productCart', JSON.stringify(productCart));
+    this.setState({ productCountControl });
+  }
+
   render() {
-    const { cartItems, productsCountControl } = this.state;
+    const { productCart, productCountControl } = this.state;
     return (
       <div>
         <ul>
-          { cartItems.map(({ id, title, price, thumbnail }) => (
-            <li key={ id }>
-              <img src={ thumbnail } alt={ title } />
-              <p data-testid="shopping-cart-product-name">{ title }</p>
-              <p>{ price }</p>
-              <p
-                data-testid="shopping-cart-product-quantity"
-              >
-                { productsCountControl[id] }
-              </p>
-            </li>
-          )) }
+          { productCart.map((item) => {
+            const { id, title, price, thumbnail } = item;
+            return (
+              <li key={ id }>
+                <img src={ thumbnail } alt={ title } />
+                <p data-testid="shopping-cart-product-name">{ title }</p>
+                <p>{ price }</p>
+                <button
+                  type="button"
+                  onClick={ () => this.onProductCountDecrease(item) }
+                  data-testid="product-decrease-quantity"
+                >
+                  -
+                </button>
+                <span
+                  data-testid="shopping-cart-product-quantity"
+                >
+                  { productCountControl[id] }
+                </span>
+                <button
+                  type="button"
+                  onClick={ () => this.onProductCountIncrease(item) }
+                  data-testid="product-increase-quantity"
+                >
+                  +
+                </button>
+              </li>
+            );
+          }) }
         </ul>
         <h4 data-testid="shopping-cart-empty-message">Seu carrinho está vazio</h4>
       </div>
