@@ -1,55 +1,136 @@
 import React from 'react';
-import { getProductsItemsByID } from '../services/api';
 
 class ShoppingCart extends React.Component {
   constructor() {
     super();
     this.state = {
-      cartItems: [],
-      productsCountControl: {},
+      productCart: [],
+      productCountControl: {},
+      cartTotal: 0,
     };
   }
 
   componentDidMount() {
-    this.getCartFromStorage();
+    this.getProductCart();
   }
 
-  getCartFromStorage = async () => {
-    const storedCartItems = localStorage.getItem('cartItems');
-    if (storedCartItems) {
-      const itemIds = JSON.parse(storedCartItems);
-      const productsCountControl = {};
-      const unrepeatedIds = itemIds.reduce((finalArrayIds, id) => {
-        if (!finalArrayIds.includes(id)) {
-          productsCountControl[id] = 1;
-          return [...finalArrayIds, id];
+  addCartToStorage = (cart) => localStorage.setItem('productCart', JSON.stringify(cart));
+
+  getCartFromStorage = () => {
+    const storedProducts = localStorage.getItem('productCart');
+    return storedProducts ? JSON.parse(storedProducts) : [];
+  }
+
+  parseProductCart = (cart) => {
+    let cartTotal = 0;
+    const productCountControl = {};
+    const productCart = cart.reduce((productsArray, product) => {
+      cartTotal += product.price;
+      cartTotal = Number(cartTotal.toFixed(2));
+      if (!productsArray.some(({ id }) => id === product.id)) {
+        productCountControl[product.id] = 1;
+        return [...productsArray, product];
+      }
+      productCountControl[product.id] += 1;
+      return productsArray;
+    }, []);
+    return [productCart, productCountControl, cartTotal];
+  }
+
+  getProductCart = () => {
+    const storedCart = this.getCartFromStorage();
+    const [
+      productCart,
+      productCountControl,
+      cartTotal,
+    ] = this.parseProductCart(storedCart);
+    this.setState({ productCart, productCountControl, cartTotal });
+  }
+
+  updateProductCart = (callback) => {
+    const productCart = this.getCartFromStorage();
+    const newProductCart = callback(productCart);
+    this.addCartToStorage(newProductCart);
+    this.getProductCart();
+  }
+
+  onRemoveProductFromCart = (product) => {
+    const callback = (productCart) => productCart.filter(({ id }) => id !== product.id);
+    this.updateProductCart(callback);
+  }
+
+  onProductCountIncrease = (product) => {
+    const callback = (productCart) => [...productCart, product];
+    this.updateProductCart(callback);
+  }
+
+  removeRepeatedProduct = (productCart, id) => {
+    let foundFirstProduct = false;
+    const cartIndex = productCart.findIndex((product) => {
+      if (product.id === id) {
+        if (foundFirstProduct) {
+          return true;
         }
-        productsCountControl[id] += 1;
-        return finalArrayIds;
-      }, []);
-      const cartItems = await getProductsItemsByID(...unrepeatedIds);
-      this.setState({ cartItems, productsCountControl });
-    }
+        foundFirstProduct = true;
+      }
+      return false;
+    });
+    productCart.splice(cartIndex, 1);
+    return productCart;
+  }
+
+  onProductCountDecrease = ({ id }) => {
+    const { productCountControl } = this.state;
+    if (productCountControl[id] === 1) return;
+    const callback = (productCart) => this.removeRepeatedProduct(productCart, id);
+    this.updateProductCart(callback);
   }
 
   render() {
-    const { cartItems, productsCountControl } = this.state;
+    const { productCart, productCountControl, cartTotal } = this.state;
     return (
       <div>
         <ul>
-          { cartItems.map(({ id, title, price, thumbnail }) => (
-            <li key={ id }>
-              <img src={ thumbnail } alt={ title } />
-              <p data-testid="shopping-cart-product-name">{ title }</p>
-              <p>{ price }</p>
-              <p
-                data-testid="shopping-cart-product-quantity"
-              >
-                { productsCountControl[id] }
-              </p>
-            </li>
-          )) }
+          { productCart.map((item) => {
+            const { id, title, price, thumbnail } = item;
+            return (
+              <li key={ id }>
+                <img src={ thumbnail } alt={ title } />
+                <p data-testid="shopping-cart-product-name">{ title }</p>
+                <p>{ price }</p>
+                <button
+                  type="button"
+                  onClick={ () => this.onRemoveProductFromCart(item) }
+                >
+                  X
+                </button>
+                <button
+                  type="button"
+                  onClick={ () => this.onProductCountDecrease(item) }
+                  data-testid="product-decrease-quantity"
+                >
+                  -
+                </button>
+                <span
+                  data-testid="shopping-cart-product-quantity"
+                >
+                  { productCountControl[id] }
+                </span>
+                <button
+                  type="button"
+                  onClick={ () => this.onProductCountIncrease(item) }
+                  data-testid="product-increase-quantity"
+                >
+                  +
+                </button>
+              </li>
+            );
+          }) }
         </ul>
+        <p>
+          Total da compra: R$
+          { cartTotal }
+        </p>
         <h4 data-testid="shopping-cart-empty-message">Seu carrinho está vazio</h4>
       </div>
     );
