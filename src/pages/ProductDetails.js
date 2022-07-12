@@ -10,19 +10,19 @@ class ProductDetails extends React.Component {
       email: '',
       score: '1',
       comment: '',
-      comments: [],
+      reviews: [],
     };
   }
 
   componentDidMount() {
     this.fetchProductDetails();
-    const storedComments = localStorage.getItem('comments');
-    if (storedComments) this.setState({ comments: JSON.parse(storedComments) });
+    const reviews = JSON.parse(localStorage.getItem('reviews'));
+    if (reviews) this.setState({ reviews });
   }
 
-  saveOnStorage = () => {
-    const { comments } = this.state;
-    localStorage.setItem('comments', JSON.stringify(comments));
+  saveReviewsOnStorage = () => {
+    const { reviews } = this.state;
+    localStorage.setItem('reviews', JSON.stringify(reviews));
   }
 
   onInputChange = ({ target }) => {
@@ -30,38 +30,27 @@ class ProductDetails extends React.Component {
     this.setState({ [name]: value });
   }
 
-  onSubmitForm = (event) => {
+  onSubmitReview = (event) => {
     event.preventDefault();
     const {
       email,
       score,
       comment,
-      comments,
+      reviews,
     } = this.state;
+    reviews.push({ email, score, comment });
     this.setState({
       email: '',
       score: '1',
       comment: '',
-      comments: [...comments, {
-        email,
-        score,
-        comment,
-      }],
-    }, () => this.saveOnStorage());
+      reviews,
+    }, this.saveReviewsOnStorage);
   }
 
   fetchProductDetails = async () => {
     const { match: { params: { ship } } } = this.props;
-    const results = await getProductItemByID(ship);
-    this.setState({
-      product: results,
-    });
-  }
-
-  onAddProductToCart = (product) => {
-    const storedProducts = JSON.parse(localStorage.getItem('productCart'));
-    const newCart = storedProducts ? [...storedProducts, product] : [product];
-    localStorage.setItem('productCart', JSON.stringify(newCart));
+    const product = await getProductItemByID(ship);
+    this.setState({ product });
   }
 
   render() {
@@ -70,9 +59,13 @@ class ProductDetails extends React.Component {
       email,
       score,
       comment,
-      comments,
+      reviews,
       product,
     } = this.state;
+    const {
+      onAddProductToCart,
+      shoppingCartButton,
+    } = this.props;
     return (
       <div>
         <div>
@@ -82,12 +75,12 @@ class ProductDetails extends React.Component {
         </div>
         <button
           type="button"
-          onClick={ () => this.onAddProductToCart(product) }
+          onClick={ () => onAddProductToCart(product) }
           data-testid="product-detail-add-to-cart"
         >
           Adicionar ao carrinho
         </button>
-        <form onSubmit={ this.onSubmitForm }>
+        <form onSubmit={ this.onSubmitReview }>
           <label htmlFor="email">
             E-mail
             <input
@@ -171,17 +164,18 @@ class ProductDetails extends React.Component {
             type="submit"
             data-testid="submit-review-btn"
           >
-            Comentar
+            Avaliar
           </button>
         </form>
+        { shoppingCartButton() }
         <div>
-          <h4>Comentários</h4>
+          <h4>Avaliações</h4>
           <ul>
-            { comments.map((post) => (
-              <li key={ post.email }>
-                <p>{ post.email }</p>
-                <p>{ post.score }</p>
-                <p>{ post.comment }</p>
+            { reviews.map((review) => (
+              <li key={ review.email }>
+                <p>{ review.email }</p>
+                <p>{ review.score }</p>
+                <p>{ review.comment }</p>
               </li>
             )) }
           </ul>
@@ -197,6 +191,8 @@ ProductDetails.propTypes = {
       ship: PropTypes.string,
     }).isRequired,
   }).isRequired,
+  onAddProductToCart: PropTypes.func.isRequired,
+  shoppingCartButton: PropTypes.func.isRequired,
 };
 
 export default ProductDetails;

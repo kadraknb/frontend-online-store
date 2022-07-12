@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import Categories from '../components/Categories';
 import { getProductsFromCategoryAndQuery } from '../services/api';
@@ -58,17 +59,6 @@ class Search extends React.Component {
     // this.fetchProductssFromCategory(categoryId);
   }
 
-  onAddProductToCart = (product) => {
-    const newCart = [];
-    const storedProducts = localStorage.getItem('productCart');
-    if (storedProducts) {
-      const storedCart = JSON.parse(storedProducts);
-      newCart.push(...storedCart);
-    }
-    newCart.push(product);
-    localStorage.setItem('productCart', JSON.stringify(newCart));
-  }
-
   returnProductsList = (alreadyFetched, productsList, onAddProductToCart) => {
     if (productsList.length) {
       return (
@@ -101,7 +91,15 @@ class Search extends React.Component {
   }
 
   render() {
-    const { productsList, queryInput, alreadyFetched } = this.state;
+    const {
+      productsList,
+      queryInput,
+      alreadyFetched,
+    } = this.state;
+    const {
+      onAddProductToCart,
+      shoppingCartButton,
+    } = this.props;
     return (
       <>
         <Categories
@@ -124,15 +122,21 @@ class Search extends React.Component {
           </button>
         </form>
         { alreadyFetched ? (
-          this.returnProductsList(alreadyFetched, productsList, this.onAddProductToCart)
+          this.returnProductsList(alreadyFetched, productsList, onAddProductToCart)
         ) : (
           <h4 data-testid="home-initial-message">
             Digite algum termo de pesquisa ou escolha uma categoria.
           </h4>
         ) }
+        { shoppingCartButton() }
       </>
     );
   }
 }
+
+Search.propTypes = {
+  onAddProductToCart: PropTypes.func.isRequired,
+  shoppingCartButton: PropTypes.func.isRequired,
+};
 
 export default Search;

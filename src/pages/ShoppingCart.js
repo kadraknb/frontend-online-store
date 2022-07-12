@@ -88,59 +88,68 @@ class ShoppingCart extends React.Component {
   }
 
   render() {
-    const { productCart, productCountControl, cartTotal } = this.state;
+    const {
+      productCart,
+      productCountControl,
+      cartTotal,
+    } = this.state;
     return (
       <div>
-        <ul>
-          { productCart.map((item) => {
-            const { id, title, price, thumbnail } = item;
-            return (
-              <li key={ id }>
-                <img src={ thumbnail } alt={ title } />
-                <p data-testid="shopping-cart-product-name">{ title }</p>
-                <p>{ price }</p>
-                <button
-                  type="button"
-                  onClick={ () => this.onRemoveProductFromCart(item) }
-                >
-                  X
-                </button>
-                <button
-                  type="button"
-                  onClick={ () => this.onProductCountDecrease(item) }
-                  data-testid="product-decrease-quantity"
-                >
-                  -
-                </button>
-                <span
-                  data-testid="shopping-cart-product-quantity"
-                >
-                  { productCountControl[id] }
-                </span>
-                <button
-                  type="button"
-                  onClick={ () => this.onProductCountIncrease(item) }
-                  data-testid="product-increase-quantity"
-                >
-                  +
-                </button>
-              </li>
-            );
-          }) }
-        </ul>
-        <p>
-          Total da compra: R$
-          { cartTotal }
-        </p>
-        <Link
-          to="/checkOut"
-          data-testid="checkout-products"
-        >
-          <button type="button">
-            CheckOut
-          </button>
-        </Link>
-        <h4 data-testid="shopping-cart-empty-message">Seu carrinho está vazio</h4>
+        { productCart.length ? (
+          <div>
+            <ul>
+              { productCart.map((item) => {
+                const { id, title, price, thumbnail } = item;
+                return (
+                  <li key={ id }>
+                    <img src={ thumbnail } alt={ title } />
+                    <p data-testid="shopping-cart-product-name">{ title }</p>
+                    <p>{ price }</p>
+                    <button
+                      type="button"
+                      onClick={ () => this.onRemoveProductFromCart(item) }
+                    >
+                      X
+                    </button>
+                    <button
+                      type="button"
+                      onClick={ () => this.onProductCountDecrease(item) }
+                      data-testid="product-decrease-quantity"
+                    >
+                      -
+                    </button>
+                    <span
+                      data-testid="shopping-cart-product-quantity"
+                    >
+                      { productCountControl[id] }
+                    </span>
+                    <button
+                      type="button"
+                      onClick={ () => this.onProductCountIncrease(item) }
+                      data-testid="product-increase-quantity"
+                    >
+                      +
+                    </button>
+                  </li>
+                );
+              }) }
+            </ul>
+            <p>
+              Total da compra: R$
+              { cartTotal }
+            </p>
+            <Link
+              to="/checkOut"
+              data-testid="checkout-products"
+            >
+              <button type="button">
+                CheckOut
+              </button>
+            </Link>
+          </div>
+        ) : (
+          <h4 data-testid="shopping-cart-empty-message">Seu carrinho está vazio</h4>
+        ) }
       </div>
     );
   }
