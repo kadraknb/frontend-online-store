@@ -19,12 +19,6 @@ class Search extends React.Component {
     };
   }
 
-  componentDidMount() {
-  }
-
-  componentDidUpdate() {
-  }
-
   fetchProducts = async () => {
     const { queryInput, categoryId } = this.state;
     const { results } = await getProductsFromCategoryAndQuery(categoryId, queryInput);
@@ -33,16 +27,6 @@ class Search extends React.Component {
       alreadyFetched: true,
     });
   }
-
-  // fetchItemsFromCategory = async (categoryId) => {
-  //   console.log(categoryId);
-  //   const { results } = await catedoriaId(categoryId);
-  //   console.log(results);
-  //   this.setState({
-  //     listaItens: results,
-  //     alreadyFetched: true,
-  //   });
-  // }
 
   onQueryButtonClick = (event) => {
     event.preventDefault();
@@ -56,10 +40,9 @@ class Search extends React.Component {
 
   onCategorySelect = (categoryId) => {
     this.setState({ categoryId }, this.fetchProducts);
-    // this.fetchProductssFromCategory(categoryId);
   }
 
-  returnProductsList = (alreadyFetched, productsList, onAddProductToCart) => {
+  returnProductsList = (productsList, onAddProductToCart, alreadyFetched) => {
     if (productsList.length) {
       return (
         <ul>
@@ -97,14 +80,18 @@ class Search extends React.Component {
       alreadyFetched,
     } = this.state;
     const {
-      onAddProductToCart,
       shoppingCartButton,
+      isLoading,
+      onAddProductToCart,
     } = this.props;
     return (
       <>
         <Categories
           onCategorySelect={ this.onCategorySelect }
         />
+        <h4 data-testid="home-initial-message">
+          Digite algum termo de pesquisa ou escolha uma categoria.
+        </h4>
         <form>
           <input
             type="text"
@@ -121,12 +108,10 @@ class Search extends React.Component {
             Buscar
           </button>
         </form>
-        { alreadyFetched ? (
-          this.returnProductsList(alreadyFetched, productsList, onAddProductToCart)
+        { !isLoading ? (
+          this.returnProductsList(productsList, onAddProductToCart, alreadyFetched)
         ) : (
-          <h4 data-testid="home-initial-message">
-            Digite algum termo de pesquisa ou escolha uma categoria.
-          </h4>
+          <p>Carregando...</p>
         ) }
         { shoppingCartButton() }
       </>
@@ -137,6 +122,7 @@ class Search extends React.Component {
 Search.propTypes = {
   onAddProductToCart: PropTypes.func.isRequired,
   shoppingCartButton: PropTypes.func.isRequired,
+  isLoading: PropTypes.bool.isRequired,
 };
 
 export default Search;
