@@ -89,6 +89,8 @@ class Search extends React.Component {
         <Categories
           onCategorySelect={ this.onCategorySelect }
         />
+        <hr />
+        { shoppingCartButton() }
         <h4 data-testid="home-initial-message">
           Digite algum termo de pesquisa ou escolha uma categoria.
         </h4>
@@ -113,7 +115,7 @@ class Search extends React.Component {
         ) : (
           <p>Carregando...</p>
         ) }
-        { shoppingCartButton() }
+
       </>
     );
   }
