@@ -24,9 +24,6 @@ class Categories extends React.Component {
       categories,
     } = this.state;
     const {
-      //  categoryId,
-      //  onChangeInput,
-      //  onQueryButtonClick,
       onCategorySelect,
     } = this.props;
     return (
