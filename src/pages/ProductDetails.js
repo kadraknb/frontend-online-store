@@ -55,23 +55,29 @@ class ProductDetails extends React.Component {
 
   render() {
     const {
-      product: { title, price, thumbnail },
+      product,
       email,
       score,
       comment,
       reviews,
-      product,
     } = this.state;
     const {
       onAddProductToCart,
       shoppingCartButton,
+      freeShippingSale,
     } = this.props;
+    const {
+      title,
+      price,
+      thumbnail,
+    } = product;
     return (
       <div>
         <div>
           <p data-testid="product-detail-name">{ title }</p>
           <p>{ price }</p>
           <img src={ thumbnail } alt={ title } />
+          { product.title && freeShippingSale(product) }
         </div>
         <button
           type="button"
@@ -193,6 +199,7 @@ ProductDetails.propTypes = {
   }).isRequired,
   onAddProductToCart: PropTypes.func.isRequired,
   shoppingCartButton: PropTypes.func.isRequired,
+  freeShippingSale: PropTypes.func.isRequired,
 };
 
 export default ProductDetails;

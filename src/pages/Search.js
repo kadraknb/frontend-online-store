@@ -42,7 +42,15 @@ class Search extends React.Component {
     this.setState({ categoryId }, this.fetchProducts);
   }
 
-  returnProductsList = (productsList, onAddProductToCart, alreadyFetched) => {
+  renderProductList = () => {
+    const {
+      productsList,
+      alreadyFetched,
+    } = this.state;
+    const {
+      onAddProductToCart,
+      freeShippingSale,
+    } = this.props;
     if (productsList.length) {
       return (
         <ul>
@@ -54,6 +62,7 @@ class Search extends React.Component {
                   <p>{ title }</p>
                   <p>{ price }</p>
                   <img src={ thumbnail } alt={ title } />
+                  { freeShippingSale(product) }
                 </Link>
                 <button
                   type="button"
@@ -75,14 +84,11 @@ class Search extends React.Component {
 
   render() {
     const {
-      productsList,
       queryInput,
-      alreadyFetched,
     } = this.state;
     const {
       shoppingCartButton,
       isLoading,
-      onAddProductToCart,
     } = this.props;
     return (
       <>
@@ -111,11 +117,10 @@ class Search extends React.Component {
           </button>
         </form>
         { !isLoading ? (
-          this.returnProductsList(productsList, onAddProductToCart, alreadyFetched)
+          this.renderProductList()
         ) : (
           <p>Carregando...</p>
         ) }
-
       </>
     );
   }
@@ -125,6 +130,7 @@ Search.propTypes = {
   onAddProductToCart: PropTypes.func.isRequired,
   shoppingCartButton: PropTypes.func.isRequired,
   isLoading: PropTypes.bool.isRequired,
+  freeShippingSale: PropTypes.func.isRequired,
 };
 
 export default Search;

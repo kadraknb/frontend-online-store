@@ -10,98 +10,109 @@ class App extends React.Component {
   constructor() {
     super();
     this.state = {
-      fullProductCart: [],
       productCart: [],
       productCountControl: {},
-      cartTotal: 0,
+      cartTotal: { cost: 0, units: 0 },
       isLoading: false,
     };
   }
 
   componentDidMount() {
-    const fullProductCart = JSON.parse(localStorage.getItem('fullProductCart'));
-    const productCart = JSON.parse(localStorage.getItem('productCart'));
-    const productCountControl = JSON.parse(localStorage.getItem('productCountControl'));
-    if (fullProductCart !== null) {
-      this.setState({
-        fullProductCart,
-        productCart,
-        productCountControl,
-      });
+    const storedCart = JSON.parse(localStorage.getItem('cart'));
+    if (storedCart) {
+      this.setState({ ...storedCart });
     }
   }
 
-  loadingToggler = () => this.setState((state) => ({ isLoading: !state.isLoading }))
-
-  parseProductCart = (fullProductCart) => {
-    let cartTotal = 0;
-    const productCountControl = {};
-    localStorage.setItem('fullProductCart', JSON.stringify(fullProductCart));
-    const productCart = fullProductCart.reduce((products, product) => {
-      cartTotal += product.price;
-      cartTotal = Number(cartTotal.toFixed(2));
-      if (!products.some(({ id }) => id === product.id)) {
-        productCountControl[product.id] = 1;
-        return [...products, product];
-      }
-      productCountControl[product.id] += 1;
-      return products;
-    }, []);
-    localStorage.setItem('productCountControl', JSON.stringify(productCountControl));
-    localStorage.setItem('productCart', JSON.stringify(productCart));
-    return { fullProductCart, productCart, productCountControl, cartTotal };
+  addCartToStorage = (cart) => {
+    localStorage.setItem('cart', JSON.stringify(cart));
+    return cart;
   }
 
-  getCartFromStorage = () => {
-    const storedProducts = localStorage.getItem('productCart');
-    return storedProducts ? JSON.parse(storedProducts) : [];
+  loadingToggler = (call) => this.setState(({ isLoading: true }), call);
+
+  calculateCartTotal = (total, product) => {
+    let { cost, units } = total;
+    const { price, count } = product[1];
+    const productTotal = Number((price * count).toFixed(2));
+    cost = Number((cost + productTotal).toFixed(2));
+    units += Number(count);
+    return { cost, units };
   }
 
-  addCartToStorage = (cart) => localStorage.setItem('productCart', JSON.stringify(cart));
-
-  updateProductCart = (callback) => {
-    this.loadingToggler();
-    const { fullProductCart } = this.state;
-    const newState = this.parseProductCart(callback(fullProductCart));
-    this.setState({ ...newState }, this.loadingToggler);
-  }
-
-  onAddProductToCart = (product) => {
-    this.updateProductCart((cart) => [...cart, product]);
-  };
-
-  onRemoveUnitOfProduct = (productCart, id) => {
-    let foundFirstProduct = false;
-    const cartIndex = productCart.findIndex((product) => {
-      if (product.id === id) {
-        if (foundFirstProduct) {
+  parseProductCart = ([product, control]) => {
+    const { productCart } = this.state;
+    let { productCountControl, cartTotal } = this.state;
+    if (!control) {
+      const removeProduct = (entry, idx) => {
+        if (entry[0] !== product.id) {
           return true;
         }
-        foundFirstProduct = true;
-      }
-      return false;
-    });
-    productCart.splice(cartIndex, 1);
-    return productCart;
+        productCart.splice(idx, 1);
+        return false;
+      };
+      productCountControl = Object.fromEntries(
+        Object.entries(productCountControl).filter(removeProduct),
+      );
+    } else {
+      productCountControl[product.id].count += control;
+    }
+    const emptyControl = { cost: 0, units: 0 };
+    const controlEntries = Object.entries(productCountControl);
+    cartTotal = controlEntries.reduce(this.calculateCartTotal, emptyControl);
+    return this.addCartToStorage({ productCart, productCountControl, cartTotal });
   }
 
+  countControlCheck = ([product, control]) => {
+    const { productCart, productCountControl } = this.state;
+    const productControl = productCountControl[product.id];
+    if (!productControl) {
+      this.registerProductOnCart(product, productCart, productCountControl);
+      return true;
+    }
+    const result = productControl.count + control;
+    const availableQuantity = product.available_quantity;
+    return result === 0 || (availableQuantity > 0 && result > availableQuantity);
+  }
+
+  updateProductCart = (content) => {
+    if (this.countControlCheck(content)) return;
+    const updater = () => this.setState({
+      ...this.parseProductCart(content),
+      isLoading: false,
+    });
+    this.loadingToggler(updater);
+  }
+
+  registerProductOnCart = (product, productCart, productCountControl) => {
+    productCountControl[product.id] = { price: product.price, count: 0 };
+    this.setState({
+      productCart: [...productCart, product],
+      productCountControl,
+    }, () => this.updateProductCart([product, 1]));
+  }
+
+  onAddProductToCart = (product) => this.updateProductCart([product, 1]);
+
   shoppingCartButton = () => {
-    const { productCountControl } = this.state;
-    const productCount = Object.values(productCountControl);
-    const quantidade = productCount[0] ? productCount.reduce((aa, bb) => (aa + bb)) : 0;
+    const { cartTotal: { units } } = this.state;
     return (
       <Link to="/shoppingCart">
         <button type="button" data-testid="shopping-cart-button">
           Meu carrinho
-          {productCount[0] && (
+          {units > 0 && (
             <b data-testid="shopping-cart-size">
-              {` ${quantidade}`}
+              {` ${units}`}
             </b>
           )}
         </button>
       </Link>
     );
   }
+
+  freeShippingSale = ({ shipping }) => (
+    shipping.free_shipping && <span data-testid="free-shipping">Frete grátis</span>
+  )
 
   render() {
     const {
@@ -124,6 +135,7 @@ class App extends React.Component {
                   onAddProductToCart={ this.onAddProductToCart }
                   shoppingCartButton={ this.shoppingCartButton }
                   updateProductCart={ this.updateProductCart }
+                  freeShippingSale={ this.freeShippingSale }
                 />
               ) }
             />
@@ -141,7 +153,8 @@ class App extends React.Component {
                   productCountControl={ productCountControl }
                   cartTotal={ cartTotal }
                   updateProductCart={ this.updateProductCart }
-                  onRemoveUnitOfProduct={ this.onRemoveUnitOfProduct }
+                  freeShippingSale={ this.freeShippingSale }
+                  shoppingCartButton={ this.shoppingCartButton }
                 />
               ) }
             />
@@ -154,6 +167,7 @@ class App extends React.Component {
                   onAddProductToCart={ this.onAddProductToCart }
                   shoppingCartButton={ this.shoppingCartButton }
                   updateProductCart={ this.updateProductCart }
+                  freeShippingSale={ this.freeShippingSale }
                 />
               ) }
             />

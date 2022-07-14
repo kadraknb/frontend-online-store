@@ -3,56 +3,39 @@ import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 
 class ShoppingCart extends React.Component {
-  onRemoveProductFromCart = (product) => {
-    const { updateProductCart } = this.props;
-    const callback = (productCart) => productCart.filter(({ id }) => id !== product.id);
-    updateProductCart(callback);
-  }
-
-  onProductCountIncrease = (product) => {
-    const { updateProductCart } = this.props;
-    const callback = (productCart) => [...productCart, product];
-    updateProductCart(callback);
-  }
-
-  onProductCountDecrease = ({ id }) => {
-    const {
-      productCountControl,
-      onRemoveUnitOfProduct,
-      updateProductCart,
-    } = this.props;
-    if (productCountControl[id] === 1) return;
-    const callback = (productCart) => onRemoveUnitOfProduct(productCart, id);
-    updateProductCart(callback);
-  }
-
   render() {
     const {
       productCart,
       productCountControl,
       cartTotal,
+      updateProductCart,
+      freeShippingSale,
     } = this.props;
+    const sub = -1;
     return (
       <div>
         { productCart.length ? (
           <div>
             <ul>
-              { productCart.map((item) => {
-                const { id, title, price, thumbnail } = item;
+              { productCart.map((product) => {
+                const { id, title, price, thumbnail } = product;
+                // const control = productCountControl[id].count;
+                // const canIncrease = control < product.available_quantity;
                 return (
                   <li key={ id }>
-                    <img src={ thumbnail } alt={ title } />
                     <p data-testid="shopping-cart-product-name">{ title }</p>
                     <p>{ price }</p>
+                    <img src={ thumbnail } alt={ title } />
+                    { freeShippingSale(product) }
                     <button
                       type="button"
-                      onClick={ () => this.onRemoveProductFromCart(item) }
+                      onClick={ () => updateProductCart([product, 0]) }
                     >
                       X
                     </button>
                     <button
                       type="button"
-                      onClick={ () => this.onProductCountDecrease(item) }
+                      onClick={ () => updateProductCart([product, sub]) }
                       data-testid="product-decrease-quantity"
                     >
                       -
@@ -60,11 +43,11 @@ class ShoppingCart extends React.Component {
                     <span
                       data-testid="shopping-cart-product-quantity"
                     >
-                      { productCountControl[id] }
+                      { productCountControl[id].count }
                     </span>
                     <button
                       type="button"
-                      onClick={ () => this.onProductCountIncrease(item) }
+                      onClick={ () => updateProductCart([product, 1]) }
                       data-testid="product-increase-quantity"
                     >
                       +
@@ -75,7 +58,7 @@ class ShoppingCart extends React.Component {
             </ul>
             <p>
               Total da compra: R$
-              { cartTotal }
+              { cartTotal.cost }
             </p>
             <Link
               to="/checkOut"
@@ -96,10 +79,13 @@ class ShoppingCart extends React.Component {
 
 ShoppingCart.propTypes = {
   updateProductCart: PropTypes.func.isRequired,
-  onRemoveUnitOfProduct: PropTypes.func.isRequired,
   productCart: PropTypes.arrayOf(PropTypes.object).isRequired,
   productCountControl: PropTypes.shape({}).isRequired,
-  cartTotal: PropTypes.number.isRequired,
+  cartTotal: PropTypes.shape({
+    cost: PropTypes.number,
+    units: PropTypes.number,
+  }).isRequired,
+  freeShippingSale: PropTypes.func.isRequired,
 };
 
 export default ShoppingCart;
